@@ -8,6 +8,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Controller
@@ -18,7 +20,27 @@ public class MovieController {
     }
     @RequestMapping("/bestMovie")
     public String getBestMoviePage(Model model) {
-    model.addAttribute("BestMovie", bestMovieService.getBestMovie().getTitle());
+        model.addAttribute("BestMovie", bestMovieService.getBestMovie().getTitle());
+        Session session = sessionFactory.getCurrentSession();
+        session.beginTransaction();
+
+        List<MovieEntity> movieEntities = session.createQuery("from MovieEntity").list();
+        movieEntities.sort(Comparator.comparing(movieEntity -> movieEntity.getVotes().size()));
+
+        MovieEntity movieWithMostVotes = movieEntities.getMovieEntities.size() - 1);
+        List<String> names = new ArrayList<>();
+
+        for (VoteEntity vote: movieWithMostVotes.getVotes()) {
+            names.add(vote.getName());
+        }
+
+        String voterNamesList = String.join(",", names);
+
+        model.addAttribute("bestMovie", movieWithMostVotes.getTitle());
+        model.addAttribute("bestMovieVoters", voterNamesList);
+
+        session.getTransaction().commit();
+        
         return "bestMovie";
     }
     @RequestMapping("/voteForBestMovieForm")
@@ -35,6 +57,21 @@ public class MovieController {
     public String voteForBestMovie(HttpServletRequest request, Model model) {
         String movieTitle = request.getParameter("movieTitle");
         model.addAttribute("BestMovieVote", movieTitle);
+
+        String movieId = request.getParameter("movieId");
+        String name = request.getParameter("name");
+
+        Session session = sessionFactory.getCurrentSession();
+        session.beginTransaction();
+
+        MovieEntity movieEntity = (MovieEntity) session.get(MovieEntity.class, Integer.parseInt(movieId));
+        VoteEntity newVote = new VoteEntity();
+        newVote.setName(name);
+        movieEntity.addVote(newVote);
+
+        session.update(movieEntity);
+        session.getTransaction().commit();
+
         return "voteForBestMovie";
     }
 
