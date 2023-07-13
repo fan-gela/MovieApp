@@ -1,5 +1,6 @@
 package com.javaunit3.springmvc;
 
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -7,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @Controller
 public class MovieController {
@@ -20,7 +22,12 @@ public class MovieController {
         return "bestMovie";
     }
     @RequestMapping("/voteForBestMovieForm")
-    public String voteForBestMovieFormPage() {
+    public String voteForBestMovieFormPage(Model model) {
+        Session session = sessionFactory.getCurrentSession();
+        session.beginTransaction();
+        List<MovieEntity> movieEntities = session.createQuery("from MovieEntity").list();
+        session.getTransaction().commit();
+        model.addAttribute("movies", movieEntities);
         return "voteForBestMovie";
     }
     
